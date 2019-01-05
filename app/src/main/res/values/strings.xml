@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Find Image</string>
+    <string name="server_address">https://dapi.kakao.com/</string>
+    <string name="kakao_key">KakaoAK 74d08370ac9ea1260a9a56d1e4ea25ad</string>
 </resources>
