@@ -36,6 +36,25 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun testAPINoResult() {
+        val response = service.searchingImageResultRepo(AUTHORIZATION, "쌰탳ㅎ").execute()
+        val body = response.body()
+        val documents = body?.documents
+
+        assertEquals("is document count is zero", 0, documents?.size)
+
+    }
+
+    @Test
+    fun testAPIError() {
+        val response = service.searchingImageResultRepo(AUTHORIZATION, "쌰탳ㅎ").execute()
+        val errorBody = response.errorBody()
+
+        assertEquals("is error is null", null, errorBody)
+
+    }
+
+    @Test
     fun testAPIWithPage() {
         val response = service.searchingImageResultRepo(AUTHORIZATION, searchText, 1).execute()
         val body = response.body()
