@@ -11,6 +11,7 @@ import android.widget.Toast
 import com.example.capybara.findimage.MainActivity.SearchHandler.Companion.HANDLER_TIMER
 import com.example.capybara.findimage.network.SearchingImageServiceManager
 import com.example.capybara.findimage.network.repo.ImageResultRepo
+import com.facebook.drawee.backends.pipeline.Fresco
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Response
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Fresco.initialize(this)
         setContentView(R.layout.activity_main)
 
         initializeHandler()
@@ -50,6 +52,9 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+
+        searchImage("Lezhin")//todo test
+
     }
 
     fun searchImage(searchText: String) {
@@ -57,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun searchImage(searchText: String, page: Int) {
+        //todo 키보드 가리기
         manager.searchImage(searchText, page, object : retrofit2.Callback<ImageResultRepo> {
             override fun onResponse(call: Call<ImageResultRepo>, response: Response<ImageResultRepo>) {
                 when {

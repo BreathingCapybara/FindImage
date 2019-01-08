@@ -1,5 +1,6 @@
 package com.example.capybara.findimage
 
+import android.net.Uri
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +15,7 @@ class ImageResultAdapter(private val imageResultRepo: ImageResultRepo) :
     inner class ImageViewHolder : RecyclerView.ViewHolder {
         private lateinit var binding: ItemImageBinding
 
-        constructor(view: View) : super(view){
+        constructor(view: View) : super(view) {
             // todo is_end 값에 따라 view를 gone/visible로 변경
 //            imageResultRepo.meta.is_end
         }
@@ -25,6 +26,7 @@ class ImageResultAdapter(private val imageResultRepo: ImageResultRepo) :
 
         fun bind(objects: Any) {
             val imageRepo = objects as ImageRepo
+            binding.image.setImageURI(Uri.parse(imageRepo.thumbnail_url))
             //todo fresco를 이용하여 이미지 출력
 
             binding.executePendingBindings()
@@ -35,26 +37,26 @@ class ImageResultAdapter(private val imageResultRepo: ImageResultRepo) :
         return when (viewType) {
             ITEM_VIEW_BODY -> {
                 val binding = ItemImageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                ImageViewHolder(binding.root)
+                ImageViewHolder(binding)
             }
             else -> { // ITEM_VIEW_FOOTER
                 //todo is_end 가 true 이면 가리기(height = 0으로 지정 또는 gone으로 설정
                 val binding = ItemImageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                ImageViewHolder(binding)
+                ImageViewHolder(binding.root)
             }
         }
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
-        if (position > 0) {
+        if (position < itemCount - 1) {
             imageResultRepo.documents?.let { imageRepos ->
-                holder.bind(imageRepos[position - 1])
+                holder.bind(imageRepos[position])
             }
         }
     }
 
     override fun getItemCount(): Int {
-        return imageResultRepo.documents?.size ?: 0.plus(1)
+        return (imageResultRepo.documents?.size ?: 0).plus(1)
     }
 
     override fun getItemViewType(position: Int): Int {
