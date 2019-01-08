@@ -2,4 +2,8 @@
     <string name="app_name">Find Image</string>
     <string name="server_address">https://dapi.kakao.com/</string>
     <string name="kakao_key">KakaoAK 74d08370ac9ea1260a9a56d1e4ea25ad</string>
+    <string name="not_found">검색하지 못했습니다.</string>
+    <string name="wrong_network">통신상태가 좋지 않습니다.</string>
+    <string name="cant_search">결과를 불러오지 못했습니다.</string>
+    <string name="no_result">결과가 없습니다.</string>
 </resources>

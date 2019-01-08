@@ -1,25 +1,32 @@
 package com.example.capybara.findimage
 
-import android.support.v7.app.AppCompatActivity
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
+import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Toast
-import kotlinx.android.synthetic.main.activity_main.*
 import com.example.capybara.findimage.MainActivity.SearchHandler.Companion.HANDLER_TIMER
+import com.example.capybara.findimage.network.SearchingImageServiceManager
+import com.example.capybara.findimage.network.repo.ImageResultRepo
+import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.Call
+import retrofit2.Response
 import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mHandler: SearchHandler
+    private lateinit var manager: SearchingImageServiceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mHandler = SearchHandler(this)
+        initializeHandler()
+        initializeManager()
 
         search_text.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
@@ -45,6 +52,46 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    fun searchImage(searchText: String) {
+        searchImage(searchText, 1)
+    }
+
+    fun searchImage(searchText: String, page: Int) {
+        manager.searchImage(searchText, page, object : retrofit2.Callback<ImageResultRepo> {
+            override fun onResponse(call: Call<ImageResultRepo>, response: Response<ImageResultRepo>) {
+                when {
+                    response.errorBody() != null -> toast(this@MainActivity, getString(R.string.wrong_network))
+                    response.body()?.documents == null -> toast(this@MainActivity, getString(R.string.cant_search))
+                    response.body()?.documents?.size == 0 -> toast(this@MainActivity, getString(R.string.no_result))
+                    else -> {
+                        response.body()?.let { repo ->
+                            recyclerView.adapter = ImageResultAdapter(repo)
+                            toast(this@MainActivity, repo.documents?.size.toString())
+                        }
+
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ImageResultRepo>, t: Throwable) {
+                toast(this@MainActivity, getString(R.string.not_found))
+            }
+
+        })
+    }
+
+    private fun initializeManager() {
+        val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+        val aBundle = appInfo.metaData
+        val address = aBundle.getString("server_address")
+        val authorization = aBundle.getString("kakao_key")
+        manager = SearchingImageServiceManager(address, authorization)
+    }
+
+    private fun initializeHandler() {
+        mHandler = SearchHandler(this)
+    }
+
     private class SearchHandler internal constructor(target: MainActivity) : Handler() {
 
         companion object {
@@ -62,12 +109,21 @@ class MainActivity : AppCompatActivity() {
                 when (msg.what) {
                     HANDLER_TIMER -> {
                         val searchText: String = msg.obj as String
-                        Toast.makeText(activity, searchText, Toast.LENGTH_SHORT).show()
+                        toast(activity, searchText)
+                        activity.searchImage(searchText)
+
                     }
                     else -> {
                     }
                 }
             }
+        }
+
+    }
+
+    companion object {
+        fun toast(activity: MainActivity, text: String) {
+            Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
         }
     }
 

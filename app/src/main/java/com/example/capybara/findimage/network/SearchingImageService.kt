@@ -13,9 +13,17 @@ interface SearchingImageService {
 
     @GET("v2/search/image")
     fun searchingImageResultRepo(
-        @Header("Authorization") authorization: String, @Query("query") searchText: String, @Query(
-            "page"
-        ) page: Int
+        @Header("Authorization") authorization: String,
+        @Query("query") searchText: String,
+        @Query("page") page: Int
+    ): Call<ImageResultRepo>
+
+    @GET("v2/search/image")
+    fun searchingImageResultRepo(
+        @Header("Authorization") authorization: String,
+        @Query("query") searchText: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
     ): Call<ImageResultRepo>
 }
 
