@@ -1,5 +1,6 @@
 package com.example.capybara.findimage
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
@@ -7,6 +8,7 @@ import android.os.Message
 import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.Toast
 import com.example.capybara.findimage.MainActivity.SearchHandler.Companion.HANDLER_TIMER
 import com.example.capybara.findimage.network.SearchingImageServiceManager
@@ -16,11 +18,16 @@ import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Response
 import java.lang.ref.WeakReference
+import android.content.Context.INPUT_METHOD_SERVICE
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mHandler: SearchHandler
     private lateinit var manager: SearchingImageServiceManager
+    private var imageResultAdapter: ImageResultAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,11 +65,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun searchImage(searchText: String) {
+        imageResultAdapter = null //데이터 초기화
         searchImage(searchText, 1)
     }
 
     fun searchImage(searchText: String, page: Int) {
-        //todo 키보드 가리기
+        hideKeyboard()
+
         manager.searchImage(searchText, page, object : retrofit2.Callback<ImageResultRepo> {
             override fun onResponse(call: Call<ImageResultRepo>, response: Response<ImageResultRepo>) {
                 when {
@@ -70,9 +79,25 @@ class MainActivity : AppCompatActivity() {
                     response.body()?.documents == null -> toast(this@MainActivity, getString(R.string.cant_search))
                     response.body()?.documents?.size == 0 -> toast(this@MainActivity, getString(R.string.no_result))
                     else -> {
-                        response.body()?.let { repo ->
-                            recyclerView.adapter = ImageResultAdapter(repo)
-                            toast(this@MainActivity, repo.documents?.size.toString())
+                        response.body()?.let { imageResultRepo ->
+                            when (imageResultAdapter == null) {
+                                true -> {
+                                    imageResultAdapter = ImageResultAdapter(imageResultRepo,
+                                        View.OnClickListener {
+                                            if (!imageResultRepo.meta.is_end) {
+                                                searchImage(searchText, imageResultAdapter!!.page + 1)
+                                            }
+                                        })
+                                    recyclerView.adapter = imageResultAdapter
+                                }
+                                else -> {
+                                    imageResultAdapter?.addImageResult(imageResultRepo)
+                                    imageResultAdapter?.notifyDataSetChanged()
+                                }
+                            }
+
+                            toast(this@MainActivity, imageResultRepo.documents?.size.toString())
+
                         }
 
                     }
@@ -84,6 +109,11 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(search_text.windowToken, 0)
     }
 
     private fun initializeManager() {

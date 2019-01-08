@@ -1,5 +1,6 @@
 package com.example.capybara.findimage
 
+import android.content.Intent
 import android.net.Uri
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -8,51 +9,60 @@ import android.view.ViewGroup
 import com.example.capybara.findimage.databinding.ItemImageBinding
 import com.example.capybara.findimage.network.repo.ImageRepo
 import com.example.capybara.findimage.network.repo.ImageResultRepo
+import kotlinx.android.synthetic.main.item_image.view.*
 
-class ImageResultAdapter(private val imageResultRepo: ImageResultRepo) :
+class ImageResultAdapter(
+    private val imageResultRepo: ImageResultRepo, private val searchNextPage: View.OnClickListener
+) :
     RecyclerView.Adapter<ImageResultAdapter.ImageViewHolder>() {
 
-    inner class ImageViewHolder : RecyclerView.ViewHolder {
-        private lateinit var binding: ItemImageBinding
+    var page = 1
 
-        constructor(view: View) : super(view) {
-            // todo is_end 값에 따라 view를 gone/visible로 변경
-//            imageResultRepo.meta.is_end
+    inner class ImageViewHolder
+        (view: View, private val viewType: Int) : RecyclerView.ViewHolder(view), View.OnClickListener {
+
+        private var imageRepo: ImageRepo? = null
+
+        fun bind(objects: Any?) {
+            when (viewType) {
+                ITEM_VIEW_BODY -> {
+                    objects?.let {
+                        imageRepo = objects as ImageRepo
+                        imageRepo?.image_url?.let { url ->
+                            itemView.image.setImageURI(Uri.parse(url))
+                            itemView.image.setOnClickListener(this)
+                        }
+                    }
+                }
+                ITEM_VIEW_FOOTER -> {
+                    if (imageResultRepo.meta.is_end) itemView.image.visibility = View.GONE
+                    else itemView.image.setOnClickListener(searchNextPage)
+                }
+            }
         }
 
-        constructor(binding: ItemImageBinding) : super(binding.root) {
-            this.binding = binding
+        override fun onClick(v: View?) {
+            v?.let {
+                imageRepo?.let { imageRepo ->
+                    val intent = Intent(v.context, DetailActivity::class.java)
+                    intent.putExtra("a", imageRepo.image_url)
+                    v.context.startActivity(intent)
+                }
+            }
         }
 
-        fun bind(objects: Any) {
-            val imageRepo = objects as ImageRepo
-            binding.image.setImageURI(Uri.parse(imageRepo.thumbnail_url))
-            //todo fresco를 이용하여 이미지 출력
-
-            binding.executePendingBindings()
-        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
-        return when (viewType) {
-            ITEM_VIEW_BODY -> {
-                val binding = ItemImageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                ImageViewHolder(binding)
-            }
-            else -> { // ITEM_VIEW_FOOTER
-                //todo is_end 가 true 이면 가리기(height = 0으로 지정 또는 gone으로 설정
-                val binding = ItemImageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                ImageViewHolder(binding.root)
-            }
-        }
+        val binding = ItemImageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ImageViewHolder(binding.root, viewType)
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
         if (position < itemCount - 1) {
-            imageResultRepo.documents?.let { imageRepos ->
-                holder.bind(imageRepos[position])
-            }
-        }
+            imageResultRepo.documents?.let { imageRepos -> holder.bind(imageRepos[position]) }
+        } else holder.bind(null)
+
     }
 
     override fun getItemCount(): Int {
@@ -66,8 +76,17 @@ class ImageResultAdapter(private val imageResultRepo: ImageResultRepo) :
         }
     }
 
+    fun addImageResult(imageResultRepo: ImageResultRepo) {
+        this.imageResultRepo.meta = imageResultRepo.meta
+        imageResultRepo.documents?.let { docs ->
+            docs.forEach { doc -> this.imageResultRepo.documents?.add(doc) }
+        }
+        page++
+    }
+
     companion object {
         private const val ITEM_VIEW_BODY = 0
         private const val ITEM_VIEW_FOOTER = 1
     }
 }
+
