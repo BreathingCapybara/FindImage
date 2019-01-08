@@ -8,12 +8,18 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import com.example.capybara.findimage.MainActivity.SearchHandler.Companion.HANDLER_TIMER
+import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var mHandler: SearchHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        mHandler = SearchHandler(this)
 
         search_text.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
@@ -22,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 //todo recyclerview clear
-                timeHandler.removeMessages(HANDLER_TIMER)
+                mHandler.removeMessages(HANDLER_TIMER)
                 val text = search_text.text.toString()
 
                 when (text) {
@@ -31,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                         val msg = Message()
                         msg.what = HANDLER_TIMER
                         msg.obj = text
-                        timeHandler.sendMessageDelayed(msg, 1000)
+                        mHandler.sendMessageDelayed(msg, 1000)
                     }
                 }
             }
@@ -39,20 +45,30 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private val HANDLER_TIMER = 1
+    private class SearchHandler internal constructor(target: MainActivity) : Handler() {
 
-    val timeHandler: Handler = object : Handler() {
+        companion object {
+            const val HANDLER_TIMER = 1
+        }
+
+        private var mTarget: WeakReference<MainActivity>? = null
+
+        init {
+            mTarget = WeakReference(target)
+        }
+
         override fun handleMessage(msg: Message) {
-            when (msg.what) {
-                HANDLER_TIMER -> {
-                    val searchText: String = msg.obj as String
-                    Toast.makeText(applicationContext, searchText, Toast.LENGTH_SHORT).show()
-                }
-                else -> {
+            mTarget?.get()?.let { activity ->
+                when (msg.what) {
+                    HANDLER_TIMER -> {
+                        val searchText: String = msg.obj as String
+                        Toast.makeText(activity, searchText, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                    }
                 }
             }
         }
     }
-
 
 }
