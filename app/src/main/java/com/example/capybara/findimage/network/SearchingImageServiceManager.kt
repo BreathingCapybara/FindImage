@@ -25,9 +25,7 @@ class SearchingImageServiceManager(ADDRESS: String, private val AUTHORIZATION: S
     }
 
     fun searchImage(searchText: String, page: Int, callback: Callback<ImageResultRepo>) {
-//        service.searchingImageResultRepo(AUTHORIZATION, searchText, page).enqueue(callback)
-        service.searchingImageResultRepo(AUTHORIZATION, searchText, page, 4)
-            .enqueue(callback)//todo test를 위해 size를 4개로 지정. 확인 후 삭제 필요
+        service.searchingImageResultRepo(AUTHORIZATION, searchText, page).enqueue(callback)
     }
 
 }

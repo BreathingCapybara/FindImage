@@ -11,11 +11,10 @@
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/image"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="130dp"
             fresco:actualImageScaleType="centerCrop"
-            fresco:placeholderImage="@mipmap/ic_launcher"
-            fresco:placeholderImageScaleType="fitCenter" />
-        <!--todo 기본 아이콘을 아래방향으로 향하는 화살표로 변경 필요-->
+            fresco:placeholderImage="@drawable/baseline_arrow_downward_black_36"
+            fresco:placeholderImageScaleType="centerInside" />
 
     </LinearLayout>
 </layout>

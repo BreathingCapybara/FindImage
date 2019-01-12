@@ -60,8 +60,6 @@ class MainActivity : AppCompatActivity() {
 
         })
 
-        searchImage("Lezhin")//todo test
-
     }
 
     fun searchImage(searchText: String) {
@@ -95,8 +93,6 @@ class MainActivity : AppCompatActivity() {
                                     imageResultAdapter?.notifyDataSetChanged()
                                 }
                             }
-
-                            toast(this@MainActivity, imageResultRepo.documents?.size.toString())
 
                         }
 
